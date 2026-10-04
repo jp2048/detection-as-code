@@ -1,0 +1,36 @@
+title: Suspicious Cron Persistence Activity
+id: 65362c42-6086-470e-9f74-19f09227cede
+status: experimental
+description: Detects file writes to system cron locations via Linux audit, a common persistence technique.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: linux
+    service: auditd
+detection:
+    selection:
+        type: 'PATH'
+        name|startswith:
+            - '/etc/cron.d/'
+            - '/etc/cron.daily/'
+            - '/etc/cron.hourly/'
+            - '/etc/cron.weekly/'
+            - '/etc/cron.monthly/'
+            - '/etc/crontab'
+    filter_legit:
+        exe|endswith:
+            - '/usr/bin/crontab'
+            - '/usr/sbin/anacron'
+    condition: selection and not filter_legit
+falsepositives:
+    - System administrators managing scheduled tasks
+    - Configuration management tools (Ansible, Puppet, Chef) deploying cron jobs
+    - Package installations that ship cron files; filter by package manager exe where needed
+level: medium
+tags:
+    - attack.persistence
+    - attack.privilege_escalation
+    - attack.t1053.003
+references:
+    - https://attack.mitre.org/techniques/T1053/003/
+    - https://www.redhat.com/en/blog/configuring-linux-auditing-auditd
