@@ -1,0 +1,39 @@
+title: AWS IAM Privilege Escalation or Root Account Usage
+id: 004601ec-eef5-4605-8006-f2f220c3d788
+status: experimental
+description: Detects AWS root account usage and creation or modification of IAM users, policies, and role trust policies, which adversaries use to create persistent privileged access.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection_root:
+        userIdentity.type: 'Root'
+    selection_iam:
+        eventName|contains:
+            - 'CreateUser'
+            - 'AttachUserPolicy'
+            - 'PutUserPolicy'
+            - 'AttachRolePolicy'
+            - 'PutRolePolicy'
+            - 'UpdateAssumeRolePolicy'
+            - 'CreatePolicy'
+            - 'AttachGroupPolicy'
+    filter_breakglass:
+        userIdentity.arn|contains: 'break-glass'
+    condition: selection_root or (selection_iam and not filter_breakglass)
+falsepositives:
+    - Legitimate IAM administration and user onboarding workflows
+    - Infrastructure-as-code deployments (Terraform, CloudFormation) managing IAM
+    - Documented break-glass procedures; keep the break-glass filter list current
+level: high
+tags:
+    - attack.persistence
+    - attack.privilege_escalation
+    - attack.t1136
+    - attack.t1484
+references:
+    - https://attack.mitre.org/techniques/T1136/
+    - https://attack.mitre.org/techniques/T1484/
+    - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-iam.html
