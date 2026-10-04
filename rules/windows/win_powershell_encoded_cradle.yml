@@ -1,0 +1,39 @@
+title: Suspicious PowerShell Encoded Command or Download Cradle
+id: 3b8546f8-7f1c-4a5c-a26d-d93919f3bb46
+status: experimental
+description: Detects PowerShell launched with encoded commands or in-memory download cradles commonly used for payload retrieval and execution.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: windows
+    category: process_creation
+detection:
+    selection_img:
+        Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+    selection_encoded:
+        CommandLine|contains:
+            - ' -EncodedCommand'
+            - ' -enc '
+            - 'FromBase64String'
+    selection_cradle:
+        CommandLine|contains:
+            - 'IEX('
+            - 'Invoke-Expression'
+            - 'Invoke-WebRequest'
+            - 'Net.WebClient'
+            - 'DownloadString'
+            - 'DownloadFile'
+    condition: selection_img and (selection_encoded or selection_cradle)
+falsepositives:
+    - Administrative scripts that legitimately use encoded commands for automation
+    - Software deployment and patching tools invoking PowerShell download routines
+    - Consider an allowlist of known management tooling hashes or parent processes
+level: high
+tags:
+    - attack.execution
+    - attack.t1059.001
+references:
+    - https://attack.mitre.org/techniques/T1059/001/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
