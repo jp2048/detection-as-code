@@ -1,0 +1,36 @@
+title: Potential LSASS Credential Dumping via Process Access
+id: 10445531-8ae4-451a-b923-4042add98f1c
+status: experimental
+description: Detects processes requesting suspicious access rights to LSASS, a common precursor to credential dumping with tools like Mimikatz.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: windows
+    category: process_access
+detection:
+    selection:
+        EventID: 10
+        TargetImage|endswith: '\lsass.exe'
+        GrantedAccess|contains:
+            - '0x1010'
+            - '0x1438'
+            - '0x143a'
+            - '0x1fffff'
+    filter:
+        SourceImage|endswith:
+            - '\csrss.exe'
+            - '\services.exe'
+            - '\lsass.exe'
+            - '\MsMpEng.exe'
+    condition: selection and not filter
+falsepositives:
+    - Legitimate security products and EDR agents that inspect LSASS memory
+    - Windows Error Reporting and diagnostic tooling
+    - Tune GrantedAccess values per environment after baselining
+level: high
+tags:
+    - attack.credential_access
+    - attack.t1003.001
+references:
+    - https://attack.mitre.org/techniques/T1003/001/
+    - https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
