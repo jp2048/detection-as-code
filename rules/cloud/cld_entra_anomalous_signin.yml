@@ -1,0 +1,31 @@
+title: Anomalous Entra ID Sign-In with Elevated Risk
+id: 8715c809-c541-465d-aa4a-534c42583825
+status: experimental
+description: Detects Entra ID sign-ins flagged with elevated risk or anomalous location properties, consistent with use of valid accounts from unexpected geographies.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: azure
+    service: signinlogs
+detection:
+    selection_risk:
+        riskState|contains:
+            - 'atRisk'
+            - 'confirmedCompromised'
+    selection_anomaly:
+        riskEventTypes|contains:
+            - 'unfamiliarFeatures'
+            - 'anonymizedIPAddress'
+            - 'impossibleTravel'
+    condition: selection_risk or selection_anomaly
+falsepositives:
+    - Users traveling or connecting through VPNs egressing from unexpected regions
+    - Risk detections raised during legitimate password resets or new device enrollment
+    - Correlate with Conditional Access outcomes and device compliance before escalating
+level: high
+tags:
+    - attack.initial_access
+    - attack.t1078
+references:
+    - https://attack.mitre.org/techniques/T1078/
+    - https://learn.microsoft.com/en-us/entra/id-protection/concept-identity-protection-risks
