@@ -1,0 +1,27 @@
+title: RDP Brute Force Burst
+id: ca1356f9-ab7d-4396-9931-13202b24e2bd
+status: experimental
+description: Detects a burst of failed RDP logons from a single source IP, indicating a possible brute-force attack against Remote Desktop.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: windows
+    service: security
+detection:
+    selection:
+        EventID: 4625
+        LogonType: 10
+        Status|contains: '0xC000006D'
+    timeframe: 5m
+    condition: selection | count() by IpAddress > 10
+falsepositives:
+    - Users repeatedly mistyping credentials over RDP
+    - Misconfigured services or scripts attempting RDP authentication
+    - Adjust the count threshold and timeframe to the environment's baseline
+level: medium
+tags:
+    - attack.credential_access
+    - attack.t1110
+references:
+    - https://attack.mitre.org/techniques/T1110/
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4625
