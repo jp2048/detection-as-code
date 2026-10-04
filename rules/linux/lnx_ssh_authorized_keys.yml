@@ -1,0 +1,27 @@
+title: SSH Authorized Keys File Modification
+id: 9e58d139-e903-4968-9fa8-1493cbfb1c76
+status: experimental
+description: Detects access to SSH authorized_keys files, which adversaries modify to persist through rogue SSH keys.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: linux
+    service: auditd
+detection:
+    selection:
+        type: 'PATH'
+        name|endswith: '/authorized_keys'
+    filter_sshd_read:
+        exe: '/usr/sbin/sshd'
+    condition: selection and not filter_sshd_read
+falsepositives:
+    - Administrators provisioning SSH keys for users
+    - Configuration management tooling managing authorized_keys at scale
+    - Tune further with SYSCALL openat flags to isolate write operations if sshd reads still surface
+level: high
+tags:
+    - attack.persistence
+    - attack.t1098.004
+references:
+    - https://attack.mitre.org/techniques/T1098/004/
+    - https://www.redhat.com/en/blog/configuring-linux-auditing-auditd
