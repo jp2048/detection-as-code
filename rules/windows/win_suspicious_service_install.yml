@@ -1,0 +1,35 @@
+title: Suspicious Windows Service Installation
+id: c90a732a-bfc7-424d-81af-123f4b273425
+status: experimental
+description: Detects creation of Windows services whose binary path points to suspicious locations, a common persistence mechanism.
+author: Pavan
+date: 2026/10/04
+logsource:
+    product: windows
+    service: system
+detection:
+    selection:
+        EventID: 7045
+        ImagePath|contains:
+            - '\Temp\'
+            - '\AppData\'
+            - '\ProgramData\'
+            - 'powershell'
+            - 'cmd.exe'
+            - '.ps1'
+            - '.vbs'
+            - '.bat'
+            - '.js'
+    condition: selection
+falsepositives:
+    - Legitimate software installers that register services from user-writable paths
+    - Remote administration tools deployed by IT (verify against asset inventory)
+    - Baseline known-good ImagePath values and filter them
+level: medium
+tags:
+    - attack.persistence
+    - attack.privilege_escalation
+    - attack.t1543.003
+references:
+    - https://attack.mitre.org/techniques/T1543/003/
+    - https://learn.microsoft.com/en-us/windows/win32/services/service-security-and-access-rights
